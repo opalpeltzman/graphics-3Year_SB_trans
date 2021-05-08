@@ -23,6 +23,7 @@ class myWindowApp():
         self.window = 0
         self.canvas = 0
         self.img = 0
+        self.size = 700
 
         # container for help information
         self.help = 0
@@ -65,9 +66,9 @@ class myWindowApp():
             print("clean canvas")
             self.messages.config(text="All clean! Let's start again")
             # Adding img
-            self.img = PhotoImage(width=1000, height=500)
+            self.img = PhotoImage(width=self.size, height=self.size)
             self.canvas.create_image(
-                (1000 // 2, 500 // 2), image=self.img, state="normal")
+                (self.size // 2, self.size // 2), image=self.img, state="normal")
 
     # ############################################## files ############################################################
     """
@@ -103,7 +104,9 @@ class myWindowApp():
                     points = np.array(points)
 
                     points = list(map(float, points))
-                    new = [int(x * 10) for x in points]
+
+                    # new = [int(x * 10) for x in points]
+                    new = points
 
                     pointsLen = len(new)
                     if pointsLen == 3:
@@ -113,12 +116,75 @@ class myWindowApp():
                     if pointsLen == 8:
                         self.curves.append(new)
 
+        self.normalize_file_input()
         self.draw_file(self.lines, self.circles, self.curves)
 
     """
         draw_file(self, lines, circles, curves):
 
             """
+
+    def normalize_file_input(self):
+        maxWidth = 0
+        maxHight = 0
+
+        for line in self.lines:
+            for i in range(0, len(line)):
+                if i % 2 == 0:  # x values
+                    maxWidth = line[i] if maxWidth < line[i] else maxWidth
+
+                if i % 2 == 1:  # x values
+                    maxHight = line[i] if maxHight < line[i] else maxHight
+
+        for curve in self.curves:
+            for i in range(0, len(curve)):
+                if i % 2 == 0:  # x values
+                    maxWidth = curve[i] if maxWidth < curve[i] else maxWidth
+
+                if i % 2 == 1:  # x values
+                    maxHight = curve[i] if maxHight < curve[i] else maxHight
+
+        for circle in self.circles:
+            maxWidth = circle[0] if maxWidth < circle[0] else maxWidth
+            maxHight = circle[1] if maxHight < circle[1] else maxHight
+
+        n_lines = []
+        n_circles = []
+        n_curves = []
+
+        for line in self.lines:
+            tmp = []
+            for i in range(0, len(line)):
+                if i % 2 == 0:  # x values
+                    tmp.append(line[i] / maxWidth * self.size)
+
+                if i % 2 == 1:  # x values
+                    tmp.append(line[i] / maxHight * self.size)
+
+            n_lines.append(tmp)
+
+        for curve in self.curves:
+            tmp = []
+            for i in range(0, len(curve)):
+                if i % 2 == 0:  # x values
+                    tmp.append(curve[i] / maxWidth * self.size)
+
+                if i % 2 == 1:  # x values
+                    tmp.append(curve[i] / maxHight * self.size)
+
+            n_curves.append(tmp)
+
+        for circle in self.circles:
+            n_circles.append([circle[0] / maxWidth * self.size,
+                              circle[1] / maxHight * self.size, circle[2] / maxHight * self.size])
+
+        self.lines = n_lines
+        self.curves = n_curves
+        self.circles = n_circles
+
+        print(n_lines)
+        print(n_circles)
+        print(n_curves)
 
     def draw_file(self, lines, circles, curves):
 
@@ -364,6 +430,18 @@ class myWindowApp():
             """
     # not working need to fix
 
+    def get_calculated_rotation_x(self, x, y):
+        r = math.sqrt(pow(x, 2) + pow(y, 2))
+        phi = math.atan2(y, x) * 180 / math.pi
+
+        return r * math.cos(phi)
+
+    def get_calculated_rotation_y(self, x, y):
+        r = math.sqrt(pow(x, 2) + pow(y, 2))
+        phi = math.atan2(y, x) * 180 / math.pi
+
+        return r * math.sin(phi)
+
     def rotate(self):
         sinus = math.sin(self.rotation)
         cosinus = math.cos(self.rotation)
@@ -372,14 +450,24 @@ class myWindowApp():
 
         s_lines = []
         s_curves = []
+        s_circles = []
 
         for line in self.lines:
             x1 = line[0]
             y1 = line[1]
             x2 = line[2]
             y2 = line[3]
-            s_lines.append([x1 * cosinus - y1 * sinus, x1 * sinus + y1 * cosinus, x2 * cosinus - y2 * sinus,
-                            x2 * sinus + y2 * cosinus])
+
+            print(line)
+
+            g_x1 = self.get_calculated_rotation_x(x1, y1)
+            g_y1 = self.get_calculated_rotation_y(x1, y1)
+
+            g_x2 = self.get_calculated_rotation_x(x2, y2)
+            g_y2 = self.get_calculated_rotation_y(x2, y2)
+
+            s_lines.append([g_x1 * cosinus - g_y1 * sinus, g_x1 * sinus + g_y1 * cosinus, g_x2 * cosinus - g_y2 * sinus,
+                            g_x2 * sinus + g_y2 * cosinus])
 
         for curve in self.curves:
             x1 = curve[0]
@@ -390,22 +478,43 @@ class myWindowApp():
             y3 = curve[5]
             x4 = curve[6]
             y4 = curve[7]
+
+            g_x1 = self.get_calculated_rotation_x(x1, y1)
+            g_y1 = self.get_calculated_rotation_y(x1, y1)
+
+            g_x2 = self.get_calculated_rotation_x(x2, y2)
+            g_y2 = self.get_calculated_rotation_y(x2, y2)
+
+            g_x3 = self.get_calculated_rotation_x(x3, y3)
+            g_y3 = self.get_calculated_rotation_y(x3, y3)
+
+            g_x4 = self.get_calculated_rotation_x(x4, y4)
+            g_y4 = self.get_calculated_rotation_y(x4, y4)
+
             s_curves.append([
-                x1 * cosinus - y1 * sinus,
-                x1 * sinus + y1 * cosinus,
-                x2 * cosinus - y2 * sinus,
-                x2 * sinus + y2 * cosinus,
-                x3 * cosinus - y3 * sinus,
-                x3 * sinus + y3 * cosinus,
-                x4 * cosinus - y4 * sinus,
-                x4 * sinus + y4 * cosinus
+                g_x1 * cosinus - g_y1 * sinus,
+                g_x1 * sinus + g_y1 * cosinus,
+                g_x2 * cosinus - g_y2 * sinus,
+                g_x2 * sinus + g_y2 * cosinus,
+                g_x3 * cosinus - g_y3 * sinus,
+                g_x3 * sinus + g_y3 * cosinus,
+                g_x4 * cosinus - g_y4 * sinus,
+                g_x4 * sinus + g_y4 * cosinus
             ])
 
-        print(s_lines)
-        print(s_curves)
+        for circle in self.circles:
+            x = circle[0]
+            y = circle[1]
+
+            g_x = self.get_calculated_rotation_x(x, y)
+            g_y = self.get_calculated_rotation_y(x, y)
+
+            s_circles.append([g_x * cosinus - g_y * sinus,
+                              g_x * sinus + g_y * cosinus, line[2]])
 
         print("done")
-        self.draw_file(s_lines, self.circles, s_curves)
+        print(s_lines)
+        self.draw_file(s_lines, s_circles, s_curves)
 
     # ############################################ mirror ###########################################################
     # ############################################ shearing #########################################################
@@ -421,15 +530,15 @@ class myWindowApp():
         # Set bar Title
         self.window.title('CANVAS')
         # Set fixed dimensions to window
-        self.window.geometry("800x500")
+        self.window.geometry("700x700")
         # Adding canvas to the window
-        self.canvas = Canvas(self.window, width=1000,
-                             height=500, background='white')
+        self.canvas = Canvas(self.window, width=self.size,
+                             height=self.size, background='white')
         self.canvas.pack(fill=X)
         # Adding img
-        self.img = PhotoImage(width=1000, height=500)
+        self.img = PhotoImage(width=self.size, height=self.size)
         self.canvas.create_image(
-            (1000 // 2, 500 // 2), image=self.img, state="normal")
+            (self.size // 2, self.size // 2), image=self.img, state="normal")
 
     """
         initWindow(): creates the application menu.
@@ -494,6 +603,48 @@ class myWindowApp():
 
         # window.mainloop(), enables Tkinter listen to events in the menu window
         self.menu.mainloop()
+
+
+# ############################################ shearing #########################################################
+
+    def shearing(val, axis):
+        xMatrix = [[1, 0, 0],
+                   [val, 1, 0],
+                   [0, 0, 1]]
+
+        yMatrix = [[1, val, 0],
+                   [0, 1, 0],
+                   [0, 0, 1]]
+
+        sh_lines = []
+        sh_circles = []
+        sh_curve = []
+
+        for line in self.lines:
+            if axis == 'x':
+                line_matmul = np.matmul([line[0], line[1], 1], xMatrix)
+            else:
+                line_matmul = np.matmul([line[0], line[1], 1], yMatrix)
+            sh_lines.append(line_matmul[0][0],
+                            line_matmul[0][1], line[2], line[3])
+
+        for circle in self.circles:
+            if axis == 'x':
+                circle_matmul = np.matmul([circle[0], circle[1], 1], xMatrix)
+            else:
+                circle_matmul = np.matmul([circle[0], circle[1], 1], yMatrix)
+            sh_circles.append(
+                circle_matmul[0][0], circle_matmul[0][1], circle[2], circle[3])
+
+        for curve in self.curves:
+            if axis == 'x':
+                curve_matmul = np.matmul([curve[0], curve[1], 1], xMatrix)
+            else:
+                curve_matmul = np.matmul([curve[0], curve[1], 1], yMatrix)
+            sh_curves.append(
+                curve_matmul[0][0], curve_matmul[0][1], curve[2], curve[3])
+
+        self.draw_file(sh_lines, sh_circles, sh_curve)
 
 
 """
