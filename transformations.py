@@ -14,6 +14,8 @@ import math
 """
 App class
 """
+
+
 class myWindowApp():
 
     def __init__(self):
@@ -64,7 +66,8 @@ class myWindowApp():
             self.messages.config(text="All clean! Let's start again")
             # Adding img
             self.img = PhotoImage(width=1000, height=500)
-            self.canvas.create_image((1000 // 2, 500 // 2), image=self.img, state="normal")
+            self.canvas.create_image(
+                (1000 // 2, 500 // 2), image=self.img, state="normal")
 
     # ############################################## files ############################################################
     """
@@ -75,7 +78,8 @@ class myWindowApp():
     def browseFiles(self):
         # window with canvas is closed
         if self.canvas == 0:
-            self.messages.config(text="please open canvas first! using Open canvas button")
+            self.messages.config(
+                text="please open canvas first! using Open canvas button")
         else:
             print(self.canvas)
             filename = filedialog.askopenfilename(initialdir="/",
@@ -115,6 +119,7 @@ class myWindowApp():
         draw_file(self, lines, circles, curves):
 
             """
+
     def draw_file(self, lines, circles, curves):
 
         for line in lines:
@@ -124,7 +129,8 @@ class myWindowApp():
             self.create_circle(circle[0], circle[1], circle[2])
 
         for curve in curves:
-            self.draw_curve(curve[0], curve[1], curve[2], curve[3], curve[4], curve[5], curve[6], curve[7])
+            self.draw_curve(curve[0], curve[1], curve[2],
+                            curve[3], curve[4], curve[5], curve[6], curve[7])
 
     # ############################################## help ############################################################
     """
@@ -220,6 +226,7 @@ class myWindowApp():
         scalling_input(self):
         get scaling value from user
             """
+
     def scalling_input(self):
         self.flag = 0
         # Create toolbar menu for user inputs
@@ -246,6 +253,7 @@ class myWindowApp():
         1.scalling_transformation(self):
 
             """
+
     def scalling_transformation(self):
 
         s_lines = []
@@ -304,10 +312,12 @@ class myWindowApp():
         s_curves = []
 
         for line in self.lines:
-            s_lines.append([line[0] + self.move_x, line[1] + self.move_y, line[2] + self.move_x, line[3] + self.move_y])
+            s_lines.append([line[0] + self.move_x, line[1] + self.move_y,
+                            line[2] + self.move_x, line[3] + self.move_y])
 
         for circle in self.circles:
-            s_circles.append([circle[0] + self.move_x, circle[1] + self.move_y, circle[2]])
+            s_circles.append(
+                [circle[0] + self.move_x, circle[1] + self.move_y, circle[2]])
 
         for curve in self.curves:
             tmp = []
@@ -325,6 +335,7 @@ class myWindowApp():
             scalling_input(self):
             get scaling value from user
                 """
+
     def rotate_input(self):
         self.flag = 2
         # Create toolbar menu for user inputs
@@ -351,7 +362,8 @@ class myWindowApp():
         2.rotate(self):
 
             """
-    ## not working need to fix
+    # not working need to fix
+
     def rotate(self):
         sinus = math.sin(self.rotation)
         cosinus = math.cos(self.rotation)
@@ -403,6 +415,7 @@ class myWindowApp():
         open_canvas(self):
         open another window to show drawing on canvas.
             """
+
     def open_canvas(self):
         self.window = Toplevel(master=self.menu)
         # Set bar Title
@@ -410,11 +423,13 @@ class myWindowApp():
         # Set fixed dimensions to window
         self.window.geometry("800x500")
         # Adding canvas to the window
-        self.canvas = Canvas(self.window, width=1000, height=500, background='white')
+        self.canvas = Canvas(self.window, width=1000,
+                             height=500, background='white')
         self.canvas.pack(fill=X)
         # Adding img
         self.img = PhotoImage(width=1000, height=500)
-        self.canvas.create_image((1000 // 2, 500 // 2), image=self.img, state="normal")
+        self.canvas.create_image(
+            (1000 // 2, 500 // 2), image=self.img, state="normal")
 
     """
         initWindow(): creates the application menu.
@@ -446,17 +461,20 @@ class myWindowApp():
         # add transformations options to menu
         transform_menu = Menu(menubar)
         menubar.add_cascade(label="Transformations", menu=transform_menu)
-        transform_menu.add_command(label="Scaling", command=self.scalling_input)
+        transform_menu.add_command(
+            label="Scaling", command=self.scalling_input)
         transform_menu.add_separator()
         transform_menu.add_command(label="Rotation", command=self.rotate_input)
         transform_menu.add_separator()
-        transform_menu.add_command(label="Translation", command=self.translation_input)
+        transform_menu.add_command(
+            label="Translation", command=self.translation_input)
         transform_menu.add_separator()
         transform_menu.add_command(label="Mirror", command=self.open_canvas)
         transform_menu.add_separator()
         transform_menu.add_command(label="Shearing", command=self.open_canvas)
         transform_menu.add_separator()
-        transform_menu.add_command(label="Transformations Help", command=self.transformation_help)
+        transform_menu.add_command(
+            label="Transformations Help", command=self.transformation_help)
 
         menubar.add_command(label="Clean canvas", command=self.clean_canvas)
         menubar.add_command(label="Exit", command=self.menu.destroy)
@@ -477,9 +495,11 @@ class myWindowApp():
         # window.mainloop(), enables Tkinter listen to events in the menu window
         self.menu.mainloop()
 
+
 """
 run app
 """
+
 
 def main():
     myWindowApp()
