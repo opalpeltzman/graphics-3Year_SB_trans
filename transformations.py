@@ -4,20 +4,21 @@ Ido Betesh 307833822
 Guy Sharir 310010244
 Opal Peltzman 208521385
 """
-
-import re
+# problems:
+# 1. when trying to read a file for the second time
+# 2. mirror when its max value and not min
+# 3. rotation
+# 4. shearing
 import numpy as np
 from tkinter import *
-from tkinter import filedialog, messagebox
+from tkinter import filedialog
 import math
-
-"""
-App class
-"""
-
 
 class myWindowApp():
 
+    """
+    initialize all app varibles
+            """
     def __init__(self):
         self.menu = 0
         self.window = 0
@@ -29,35 +30,33 @@ class myWindowApp():
         self.help = 0
         self.messages = 0
 
-        # control dots from inserting file
+        # control points from inserting file
         self.circles = []
         self.lines = []
         self.curves = []
 
         # transformations variables
         self.tollbar = 0
-        self.flag = 0   # {0:scaling, 1:rotation, 2:translation}
+        self.flag = 0
         self.x_entry = 0
         self.y_entry = 0
-
         self.scaling_value = 0
         self.move_x = 0
         self.move_y = 0
         self.rotation = 0
         self.axis = 0
 
-        # colors
         # default color for pixel (black in hex)
         self.color = "#041412"
 
         # start function
         self.initWindow()
 
+
     """
        clean_canvas(self):
        deletes all drawing from canvas.
             """
-
     def clean_canvas(self):
         if self.canvas != 0:
             print("here")
@@ -69,19 +68,16 @@ class myWindowApp():
             self.canvas.create_image(
                 (self.size // 2, self.size // 2), image=self.img, state="normal")
 
-    # ############################################## files ############################################################
     """
         browseFiles(self):
-        open the file explorer window.
+        open the file explorer window to brows file.
             """
-
     def browseFiles(self):
-        # window with canvas is closed
+        # check if canvas window  is closed
         if self.canvas == 0:
             self.messages.config(
                 text="please open canvas first! using Open canvas button")
         else:
-            print(self.canvas)
             filename = filedialog.askopenfilename(initialdir="/",
                                                   title="Select a File",
                                                   filetypes=(("Text files",
@@ -94,13 +90,12 @@ class myWindowApp():
         getObjects(self, fileName):
         open file and reads all control points.
             """
-
     def getObjects(self, fileName):
         if fileName:
             with open(fileName) as f:
                 for row in f:
                     points = re.findall(r'\d+[.]+\d|\d+', row)
-                    points = np.array(points)
+                    # points = np.array(points)
 
                     points = list(map(float, points))
 
@@ -119,10 +114,10 @@ class myWindowApp():
         self.draw_file(self.lines, self.circles, self.curves)
 
     """
-        draw_file(self, lines, circles, curves):
-
+        normalize_file_input(self):
+        normalize the word coordinates to our 
+        canvas coordinates.
             """
-
     def normalize_file_input(self):
         maxWidth = 0
         maxHight = 0
@@ -130,26 +125,32 @@ class myWindowApp():
         for line in self.lines:
             for i in range(0, len(line)):
                 if i % 2 == 0:  # x values
-                    maxWidth = line[i] if maxWidth < line[i] else maxWidth
+                    maxWidth = max(line[i], maxWidth)
 
                 if i % 2 == 1:  # x values
-                    maxHight = line[i] if maxHight < line[i] else maxHight
+                    maxHight = max(line[i], maxHight)
 
         for curve in self.curves:
             for i in range(0, len(curve)):
                 if i % 2 == 0:  # x values
-                    maxWidth = curve[i] if maxWidth < curve[i] else maxWidth
+                    maxWidth = max(curve[i], maxWidth)
 
                 if i % 2 == 1:  # x values
-                    maxHight = curve[i] if maxHight < curve[i] else maxHight
+                    maxHight = max(curve[i], maxHight)
 
         for circle in self.circles:
-            maxWidth = circle[0] if maxWidth < circle[0] else maxWidth
-            maxHight = circle[1] if maxHight < circle[1] else maxHight
+            maxWidth = max(circle[0], maxWidth)
+            maxHight = max(circle[1], maxHight)
 
         n_lines = []
         n_circles = []
         n_curves = []
+
+        y_ratio = 1
+        x_ratio = 1
+
+        maxWidth += maxWidth
+        maxHight += maxHight
 
         for line in self.lines:
             tmp = []
@@ -158,7 +159,7 @@ class myWindowApp():
                     tmp.append(line[i] / maxWidth * self.size)
 
                 if i % 2 == 1:  # x values
-                    tmp.append(line[i] / maxHight * self.size)
+                    tmp.append(self.size - (line[i] / maxHight * self.size))
 
             n_lines.append(tmp)
 
@@ -169,22 +170,23 @@ class myWindowApp():
                     tmp.append(curve[i] / maxWidth * self.size)
 
                 if i % 2 == 1:  # x values
-                    tmp.append(curve[i] / maxHight * self.size)
+                    tmp.append(self.size - (curve[i] / maxHight * self.size))
 
-            n_curves.append(tmp)
+                n_curves.append(tmp)
 
         for circle in self.circles:
             n_circles.append([circle[0] / maxWidth * self.size,
-                              circle[1] / maxHight * self.size, circle[2] / maxHight * self.size])
+                              self.size - (circle[1] / maxHight * self.size),
+                              circle[2] / maxHight * self.size])
 
         self.lines = n_lines
         self.curves = n_curves
         self.circles = n_circles
 
-        print(n_lines)
-        print(n_circles)
-        print(n_curves)
-
+    """
+        draw_file(self, lines, circles, curves):
+        draw all lines according to the file's information
+            """
     def draw_file(self, lines, circles, curves):
 
         for line in lines:
@@ -197,12 +199,10 @@ class myWindowApp():
             self.draw_curve(curve[0], curve[1], curve[2],
                             curve[3], curve[4], curve[5], curve[6], curve[7])
 
-    # ############################################## help ############################################################
     """
         transformation_help(self):
         change text information to information about transactions.
             """
-
     def transformation_help(self):
         self.help.delete('1.0', END)
         info = """In order to display your coordinates file\nmake sure it follows these rules:\n- Line has to be formatted as (x1, y1, x2, y2)\n- Circle has to be formatted as (x, y, radius)\n- Curve has to be formatted as (x1, y1, x2, y2, x3, y3, x4, y4).\n"""
@@ -212,7 +212,6 @@ class myWindowApp():
         file_help(self):
         change text information to information about file.
             """
-
     def file_help(self):
         self.help.delete('1.0', END)
         info = """You should upload TXT file that contains your structure.\nIn the file, the structure should be divided to control points for\ncurves, circles and lines.\nFor the points structures please go to Transactions Help.\n"""
@@ -222,24 +221,25 @@ class myWindowApp():
         destroy_transaction_widget(self):
         deletes all widgets relevant to specific transaction.
             """
-
     def destroy_transaction_widget(self):
         if self.tollbar != 0:
             self.tollbar.destroy()
 
     """
         get_user_inputs(self):
-        get user inputs and call the correct transformations.
+        get user inputs acoording to the transaction 
+        and call the correct transformation function.
             """
-
     def get_user_inputs(self):
-        # {0:scaling, 1:rotation, 2:translation}
+        # clean canvas before translations
+        self.clean_canvas()
+        # {0:scaling, 1:rotation, 2:translation, 3:mirror, 4:shearing}
         if self.flag == 0:
             self.scaling_value = float(self.x_entry.get())
             self.scalling_transformation()
         elif self.flag == 1:
             self.move_x = float(self.x_entry.get())
-            self.move_y = float(self.y_entry.get())
+            self.move_y = -1 * float(self.y_entry.get())
             self.translation()
         elif self.flag == 2:
             self.rotation = float(self.x_entry.get())
@@ -248,15 +248,15 @@ class myWindowApp():
             self.axis = str(self.x_entry.get())
             self.mirror_transformation()
         elif self.flag == 4:
-            pass
+            self.axis = str(self.x_entry.get())
+            self.move_x = float(self.y_entry.get())
+            self.shearing()
 
-    # ############################################## shapes ##########################################################
     """
         draw_curve(self, x1, y1, x2, y2, x3, y3, x4, y4):
         draws curve given 4 points based on
         Bezier algorithm for drawing curve
             """
-
     def draw_curve(self, x1, y1, x2, y2, x3, y3, x4, y4):
 
         linesInCurve = 1000
@@ -278,7 +278,6 @@ class myWindowApp():
     """
         create_circle(self, t, y, r):
             """
-
     def create_circle(self, t, y, r):  # center coordinates, radius
         x0 = t - r
         y0 = y - r
@@ -286,20 +285,21 @@ class myWindowApp():
         y1 = y + r
         self.canvas.create_oval(x0, y0, x1, y1)
 
-    # ############################################ transformations ###################################################
-    # ############################################ scaling ###########################################################
+
+    #################################
+    #######  transformations  #######
+    #################################
     """
         scalling_input(self):
         get scaling value from user
             """
-
     def scalling_input(self):
         self.flag = 0
         # Create toolbar menu for user inputs
         self.destroy_transaction_widget()
         self.tollbar = Frame(self.menu)
         self.tollbar.pack(fill=X)
-        x_value = Label(self.tollbar, text="enter X value")
+        x_value = Label(self.tollbar, text="enter scaling value")
         x_value.pack(side=LEFT, padx=2, pady=2)
         self.x_entry = Entry(self.tollbar)
         self.x_entry.pack(side=LEFT, padx=2, pady=2)
@@ -317,11 +317,10 @@ class myWindowApp():
     """
         Transformations -
         1.scalling_transformation(self):
-
+        !!!!!!!!!!!!!!!!!!!!!! info
             """
-
     def scalling_transformation(self):
-
+    # change y to division instead of multiply!!!
         s_lines = []
         s_circles = []
         s_curves = []
@@ -334,15 +333,18 @@ class myWindowApp():
 
         for curve in self.curves:
             s_curves.append([x * self.scaling_value for x in curve])
+        print(self.lines)
+        print(s_lines)
+        # self.lines = s_lines
+        # self.circles = s_circles
+        # self.curves = s_curves
 
         self.draw_file(s_lines, s_circles, s_curves)
 
-    # ############################################ translation ######################################################
     """
         translation_input(self):
         get translation value from user
             """
-
     def translation_input(self):
         self.flag = 1
         # Create toolbar menu for user inputs
@@ -370,8 +372,8 @@ class myWindowApp():
     """
         Transformations -
         2.translation(self):
+        !!!!!!!!!!!!!!!!!!!!!! info
             """
-
     def translation(self):
         s_lines = []
         s_circles = []
@@ -394,21 +396,23 @@ class myWindowApp():
 
             s_curves.append(tmp)
 
-        self.draw_file(s_lines, s_circles, s_curves)
+        self.lines = s_lines
+        self.circles = s_circles
+        self.curves = s_curves
 
-    # ############################################ rotate ###########################################################
+        self.draw_file(self.lines, self.circles, self.curves)
+
     """
-            scalling_input(self):
-            get scaling value from user
-                """
-
+        rotate_input(self):
+        get angle value from user
+            """
     def rotate_input(self):
         self.flag = 2
         # Create toolbar menu for user inputs
         self.destroy_transaction_widget()
         self.tollbar = Frame(self.menu)
         self.tollbar.pack(fill=X)
-        x_value = Label(self.tollbar, text="enter X value")
+        x_value = Label(self.tollbar, text="enter rotation value")
         x_value.pack(side=LEFT, padx=2, pady=2)
         self.x_entry = Entry(self.tollbar)
         self.x_entry.pack(side=LEFT, padx=2, pady=2)
@@ -426,7 +430,7 @@ class myWindowApp():
     """
         Transformations -
         3.rotate(self):
-
+        !!!!!!!!!!!!!!!!!!!!!! info
             """
     def get_calculated_rotation_x(self, x, y):
         r = math.sqrt(pow(x, 2) + pow(y, 2))
@@ -444,8 +448,6 @@ class myWindowApp():
         sinus = math.sin(self.rotation)
         cosinus = math.cos(self.rotation)
 
-        print("here")
-
         s_lines = []
         s_curves = []
         s_circles = []
@@ -455,8 +457,6 @@ class myWindowApp():
             y1 = line[1]
             x2 = line[2]
             y2 = line[3]
-
-            print(line)
 
             g_x1 = self.get_calculated_rotation_x(x1, y1)
             g_y1 = self.get_calculated_rotation_y(x1, y1)
@@ -508,16 +508,20 @@ class myWindowApp():
             g_y = self.get_calculated_rotation_y(x, y)
 
             s_circles.append([g_x * cosinus - g_y * sinus,
-                              g_x * sinus + g_y * cosinus, line[2]])
+                              g_x * sinus + g_y * cosinus, circle[2]])
 
-        print("done")
         print(s_lines)
-        self.draw_file(s_lines, s_circles, s_curves)
 
-    # ############################################ mirror ###########################################################
+        self.lines = s_lines
+        self.circles = s_circles
+        self.curves = s_curves
+
+        self.draw_file(self.lines, self.circles, self.curves)
+
+
     """
         mirror_input(self):
-        get scaling value from user
+        get axis from user
             """
     def mirror_input(self):
         self.flag = 3
@@ -543,63 +547,174 @@ class myWindowApp():
     """
         Transformations -
         4.mirror_transformation(self):
-
+        !!!!!!!!!!!!!!!!!!!!! info
             """
     def mirror_transformation(self):
-
+        min_y = 0
+        mix_x = 0
         s_lines = []
         s_circles = []
         s_curves = []
 
         if self.axis == 'X' or self.axis == 'x':
-            print("here x")
             for line in self.lines:
                 s_lines.append([line[0], line[1] * -1, line[2],
                                 line[3] * -1])
+                if min(s_lines[0]) < min_y:
+                    min_y = min(s_lines[0])
 
             for circle in self.circles:
+                if circle[1] * -1 < min_y:
+                    min_y = circle[1] * -1
                 s_circles.append([circle[0], circle[1] * -1, circle[2]])
 
             for curve in self.curves:
                 s_curves.append([curve[0], curve[1] * -1, curve[2], curve[3] * -1, curve[4], curve[5] * -1, curve[6],
                                  curve[7] * -1])
+                if min(s_curves[0]) < min_y:
+                    min_y = min(s_curves[0])
+            self.move_y = -1 * min_y
+
         if self.axis == 'Y' or self.axis == 'y':
-            print("here y")
             for line in self.lines:
                 s_lines.append([line[0] * -1, line[1], line[2] * -1,
                                 line[3]])
+                if min(s_lines[0]) < mix_x:
+                    mix_x = min(s_lines[0])
 
             for circle in self.circles:
+                if circle[0] * -1 < mix_x:
+                    mix_x = circle[0] * -1
                 s_circles.append([circle[0] * -1, circle[1], circle[2]])
 
             for curve in self.curves:
-                s_curves.append([curve[0] * -1, curve[1], curve[2] * -1, curve[3], curve[4] * -1, curve[5], curve[6] * -1,
-                                 curve[7]])
-        print(s_lines)
-        print(s_circles)
-        self.draw_file(s_lines, s_circles, s_curves)
-    # ############################################ shearing #########################################################
+                s_curves.append(
+                    [curve[0] * -1, curve[1], curve[2] * -1, curve[3], curve[4] * -1, curve[5], curve[6] * -1,
+                     curve[7]])
+                if min(s_curves[0]) < mix_x:
+                    mix_x = min(s_curves[0])
+            self.move_x = -1 * mix_x
 
-    # ############################################ windows ##########################################################
+        self.lines = s_lines
+        self.circles = s_circles
+        self.curves = s_curves
+
+        self.translation()
+        self.draw_file(self.lines, self.circles, self.curves)
+
+
+    """
+        shearing_input(self):
+        get shearing value from user
+            """
+    def shearing_input(self):
+        self.flag = 4
+        # Create toolbar menu for user inputs
+        self.destroy_transaction_widget()
+        self.tollbar = Frame(self.menu)
+        self.tollbar.pack(fill=X)
+        x_value = Label(self.tollbar, text="enter axis: X/Y")
+        x_value.pack(side=LEFT, padx=2, pady=2)
+        self.x_entry = Entry(self.tollbar)
+        self.x_entry.pack(side=LEFT, padx=2, pady=2)
+        y_value = Label(self.tollbar, text="enter shearing value")
+        y_value.pack(side=LEFT, padx=2, pady=2)
+        self.y_entry = Entry(self.tollbar)
+        self.y_entry.pack(side=LEFT, padx=2, pady=2)
+        send = Button(
+            self.tollbar,
+            relief=FLAT,
+            compound=LEFT,
+            text="SEND",
+            activebackground='pink',
+            command=self.get_user_inputs
+        )
+        send.pack(side=LEFT, padx=2, pady=2)
+
+    """
+        shearing(self):
+        !!!!!!!!!!!!!!!!!!!!! info
+            """
+    def shearing(self):
+        xMatrix = [[1, 0, 0],
+                   [self.move_x, 1, 0],
+                   [0, 0, 1]]
+
+        yMatrix = [[1, self.move_x, 0],
+                   [0, 1, 0],
+                   [0, 0, 1]]
+
+        sh_lines = []
+        sh_circles = []
+        sh_curves = []
+
+        for line in self.lines:
+            if self.axis == 'x' or self.axis == 'X':
+                line_matmul = np.matmul([line[0], line[1], 1], xMatrix)
+            else:
+                line_matmul = np.matmul([line[0], line[1], 1], yMatrix)
+                # print(f"matmul: {line_matmul}")
+            sh_lines.append([line_matmul[0],
+                            line_matmul[1], line[2], line[3]])
+
+        for circle in self.circles:
+            if self.axis == 'x' or self.axis == 'X':
+                circle_matmul = np.matmul([circle[0], circle[1], 1], xMatrix)
+            else:
+                circle_matmul = np.matmul([circle[0], circle[1], 1], yMatrix)
+            sh_circles.append([
+                circle_matmul[0], circle_matmul[1], circle[2]])
+
+        for curve in self.curves:
+            if self.axis == 'x' or self.axis == 'X':
+                curve_matmul = np.matmul([curve[0], curve[1], 1], xMatrix)
+            else:
+                curve_matmul = np.matmul([curve[0], curve[1], 1], yMatrix)
+            sh_curves.append([
+                curve_matmul[0], curve_matmul[1], curve[2], curve[3], curve[4], curve[5], curve[6], curve[7]])
+
+        self.lines = sh_lines
+        self.circles = sh_circles
+        self.curves = sh_curves
+
+        self.draw_file(self.lines, self.circles, self.curves)
+
+
+
+    #################################
+    #######        GUI        #######
+    #################################
+    def on_closing(self):
+        print("canvas window is closed")
+        self.window.destroy()
+        self.window = 0
+        self.canvas = 0
+
     """
         open_canvas(self):
         open another window to show drawing on canvas.
             """
-
     def open_canvas(self):
-        self.window = Toplevel(master=self.menu)
-        # Set bar Title
-        self.window.title('CANVAS')
-        # Set fixed dimensions to window
-        self.window.geometry("700x700")
-        # Adding canvas to the window
-        self.canvas = Canvas(self.window, width=self.size,
-                             height=self.size, background='white')
-        self.canvas.pack(fill=X)
-        # Adding img
-        self.img = PhotoImage(width=self.size, height=self.size)
-        self.canvas.create_image(
-            (self.size // 2, self.size // 2), image=self.img, state="normal")
+        if self.window == 0:
+            self.window = Toplevel(master=self.menu)
+            # Set bar Title
+            self.window.title('CANVAS')
+            # Set fixed dimensions to window
+            self.window.geometry("700x700")
+            # Adding canvas to the window
+            self.canvas = Canvas(self.window, width=self.size,
+                                 height=self.size, background='white')
+            self.canvas.pack(fill=X)
+            # Adding img
+            self.img = PhotoImage(width=self.size, height=self.size)
+            self.canvas.create_image(
+                (self.size // 2, self.size // 2), image=self.img, state="normal")
+
+            if self.window != 0:
+                self.window.protocol("WM_DELETE_WINDOW", self.on_closing)
+        else:
+            self.messages.config(
+                text="canvas window is already open")
 
     """
         initWindow(): creates the application menu.
@@ -641,7 +756,7 @@ class myWindowApp():
         transform_menu.add_separator()
         transform_menu.add_command(label="Mirror", command=self.mirror_input)
         transform_menu.add_separator()
-        transform_menu.add_command(label="Shearing", command=self.open_canvas)
+        transform_menu.add_command(label="Shearing", command=self.shearing_input)
         transform_menu.add_separator()
         transform_menu.add_command(
             label="Transformations Help", command=self.transformation_help)
@@ -665,55 +780,15 @@ class myWindowApp():
         # window.mainloop(), enables Tkinter listen to events in the menu window
         self.menu.mainloop()
 
-
-# ############################################ shearing #########################################################
-
-    def shearing(val, axis):
-        xMatrix = [[1, 0, 0],
-                   [val, 1, 0],
-                   [0, 0, 1]]
-
-        yMatrix = [[1, val, 0],
-                   [0, 1, 0],
-                   [0, 0, 1]]
-
-        sh_lines = []
-        sh_circles = []
-        sh_curve = []
-
-        for line in self.lines:
-            if axis == 'x':
-                line_matmul = np.matmul([line[0], line[1], 1], xMatrix)
-            else:
-                line_matmul = np.matmul([line[0], line[1], 1], yMatrix)
-            sh_lines.append(line_matmul[0][0],
-                            line_matmul[0][1], line[2], line[3])
-
-        for circle in self.circles:
-            if axis == 'x':
-                circle_matmul = np.matmul([circle[0], circle[1], 1], xMatrix)
-            else:
-                circle_matmul = np.matmul([circle[0], circle[1], 1], yMatrix)
-            sh_circles.append(
-                circle_matmul[0][0], circle_matmul[0][1], circle[2], circle[3])
-
-        for curve in self.curves:
-            if axis == 'x':
-                curve_matmul = np.matmul([curve[0], curve[1], 1], xMatrix)
-            else:
-                curve_matmul = np.matmul([curve[0], curve[1], 1], yMatrix)
-            sh_curves.append(
-                curve_matmul[0][0], curve_matmul[0][1], curve[2], curve[3])
-
-        self.draw_file(sh_lines, sh_circles, sh_curve)
-
-
 """
 run app
 """
 
-
 def main():
+    print(math.atan2(0, 1) * 180 / math.pi)
+    print(math.atan2(0, -1) * 180 / math.pi)
+    # print(math.atan2(1, -1) * 180 / math.pi)
+    # print(math.atan2(-1, ) * 180 / math.pi)
     myWindowApp()
 
 
