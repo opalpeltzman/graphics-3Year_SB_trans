@@ -41,11 +41,10 @@ class myWindowApp():
         self.y_entry = 0
 
         self.scaling_value = 0
-
         self.move_x = 0
         self.move_y = 0
-
         self.rotation = 0
+        self.axis = 0
 
         # colors
         # default color for pixel (black in hex)
@@ -246,7 +245,8 @@ class myWindowApp():
             self.rotation = float(self.x_entry.get())
             self.rotate()
         elif self.flag == 3:
-            pass
+            self.axis = str(self.x_entry.get())
+            self.mirror_transformation()
         elif self.flag == 4:
             pass
 
@@ -425,11 +425,9 @@ class myWindowApp():
 
     """
         Transformations -
-        2.rotate(self):
+        3.rotate(self):
 
             """
-    # not working need to fix
-
     def get_calculated_rotation_x(self, x, y):
         r = math.sqrt(pow(x, 2) + pow(y, 2))
         phi = math.atan2(y, x) * 180 / math.pi
@@ -517,6 +515,69 @@ class myWindowApp():
         self.draw_file(s_lines, s_circles, s_curves)
 
     # ############################################ mirror ###########################################################
+    """
+        mirror_input(self):
+        get scaling value from user
+            """
+    def mirror_input(self):
+        self.flag = 3
+        # Create toolbar menu for user inputs
+        self.destroy_transaction_widget()
+        self.tollbar = Frame(self.menu)
+        self.tollbar.pack(fill=X)
+        x_value = Label(self.tollbar, text="enter axis: X/Y")
+        x_value.pack(side=LEFT, padx=2, pady=2)
+        self.x_entry = Entry(self.tollbar)
+        self.x_entry.pack(side=LEFT, padx=2, pady=2)
+
+        send = Button(
+            self.tollbar,
+            relief=FLAT,
+            compound=LEFT,
+            text="SEND",
+            activebackground='pink',
+            command=self.get_user_inputs
+        )
+        send.pack(side=LEFT, padx=2, pady=2)
+
+    """
+        Transformations -
+        4.mirror_transformation(self):
+
+            """
+    def mirror_transformation(self):
+
+        s_lines = []
+        s_circles = []
+        s_curves = []
+
+        if self.axis == 'X' or self.axis == 'x':
+            print("here x")
+            for line in self.lines:
+                s_lines.append([line[0], line[1] * -1, line[2],
+                                line[3] * -1])
+
+            for circle in self.circles:
+                s_circles.append([circle[0], circle[1] * -1, circle[2]])
+
+            for curve in self.curves:
+                s_curves.append([curve[0], curve[1] * -1, curve[2], curve[3] * -1, curve[4], curve[5] * -1, curve[6],
+                                 curve[7] * -1])
+        if self.axis == 'Y' or self.axis == 'y':
+            print("here y")
+            for line in self.lines:
+                s_lines.append([line[0] * -1, line[1], line[2] * -1,
+                                line[3]])
+
+            for circle in self.circles:
+                s_circles.append([circle[0] * -1, circle[1], circle[2]])
+
+            for curve in self.curves:
+                s_curves.append([curve[0] * -1, curve[1], curve[2] * -1, curve[3], curve[4] * -1, curve[5], curve[6] * -1,
+                                 curve[7]])
+        print(s_lines)
+        print(s_circles)
+        self.draw_file(s_lines, s_circles, s_curves)
     # ############################################ shearing #########################################################
 
     # ############################################ windows ##########################################################
@@ -578,7 +639,7 @@ class myWindowApp():
         transform_menu.add_command(
             label="Translation", command=self.translation_input)
         transform_menu.add_separator()
-        transform_menu.add_command(label="Mirror", command=self.open_canvas)
+        transform_menu.add_command(label="Mirror", command=self.mirror_input)
         transform_menu.add_separator()
         transform_menu.add_command(label="Shearing", command=self.open_canvas)
         transform_menu.add_separator()
