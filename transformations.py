@@ -518,51 +518,45 @@ class myWindowApp():
     """
         Transformations -
         3.rotate(self):
-        !!!!!!!!!!!!!!!!!!!!!! info
+        this transformation rotates the object around the (0,0) point.
             """
 
     def change_coordinates(self, x, y):
         r = math.sqrt(pow(x, 2) + pow(y, 2))
         phi = math.atan2(y, x) * 180 / math.pi
 
-        if x > 0 and y < 0:
-            phi = 180 + phi
+        phi = phi / 180 * math.pi
 
-        else:
-            phi = 90 - phi
-
-        print(f"r:${r}, phi:${phi}, x:${x}, y:${y}")
-
-        return r, phi
+        return r*math.cos(phi), r * math.sin(phi)
 
     def rotate(self):
         # clean canvas before translations
         self.clean_canvas()
-        sinus = math.sin(self.rotation)
-        cosinus = math.cos(self.rotation)
 
-        print(self.rotation)
+        # set the value of needed rotation in degrees
+        sinus = math.sin(self.rotation/180*math.pi)
+        cosinus = math.cos(self.rotation/180*math.pi)
+
         s_lines = []
         s_curves = []
         s_circles = []
 
+        # transform all lines
         for line in self.lines:
             x1 = line[0]
             y1 = line[1]
             x2 = line[2]
             y2 = line[3]
 
-            # g_x1, g_y1 = self.change_coordinates(x1, y1)
-            # g_x2, g_y2 = self.change_coordinates(x2, y2)
+            # convert cartesian to polar
+            g_x1, g_y1 = self.change_coordinates(x1, y1)
+            g_x2, g_y2 = self.change_coordinates(x2, y2)
 
-            # s_lines.append([g_x1 * cosinus - g_y1 * sinus, g_x1 * sinus + g_y1 * cosinus, g_x2 * cosinus - g_y2 * sinus,
-            #                 g_x2 * sinus + g_y2 * cosinus])
+            # save converted lines
+            s_lines.append([g_x1*cosinus - g_y1 * sinus, g_y1 * cosinus + g_x1 *
+                            sinus, g_x2*cosinus - g_y2 * sinus, g_y2 * cosinus + g_x2 * sinus])
 
-            r1, phi1 = self.change_coordinates(x1, y1)
-            r2, phi2 = self.change_coordinates(x2, y2)
-            s_lines.append([r1 * math.cos(phi1 + self.rotation), r1 * math.sin(phi1 + self.rotation),
-                            r2 * math.cos(phi2 + self.rotation), r2 * math.sin(phi2 + self.rotation)])
-
+        # transform all curves
         for curve in self.curves:
             x1 = curve[0]
             y1 = curve[1]
@@ -573,11 +567,13 @@ class myWindowApp():
             x4 = curve[6]
             y4 = curve[7]
 
+            # convert cartesian to polar
             g_x1, g_y1 = self.change_coordinates(x1, y1)
             g_x2, g_y2 = self.change_coordinates(x2, y2)
             g_x3, g_y3 = self.change_coordinates(x3, y3)
             g_x4, g_y4 = self.change_coordinates(x4, y4)
 
+            # save converted curves
             s_curves.append([
                 g_x1 * cosinus - g_y1 * sinus,
                 g_x1 * sinus + g_y1 * cosinus,
@@ -589,22 +585,27 @@ class myWindowApp():
                 g_x4 * sinus + g_y4 * cosinus
             ])
 
+        # transform all circles
         for circle in self.circles:
             x = circle[0]
             y = circle[1]
 
+            # convert cartesian to polar
             g_x, g_y = self.change_coordinates(x, y)
 
+            # save converted circles
             s_circles.append([g_x * cosinus - g_y * sinus,
                               g_x * sinus + g_y * cosinus, circle[2]])
 
+        # save new positions for consistence
         self.lines = s_lines
         self.circles = s_circles
         self.curves = s_curves
 
-        # self.bring_to_view()
-        print(self.lines)
+        # bring object in to view if needed
+        self.bring_to_view()
 
+        # draw shape
         self.draw_file(self.lines, self.circles, self.curves)
 
     """
@@ -657,7 +658,6 @@ class myWindowApp():
             for curve in self.curves:
                 s_curves.append([curve[0], curve[1] * -1, curve[2], curve[3] * -1, curve[4], curve[5] * -1, curve[6],
                                  curve[7] * -1])
-
 
         elif self.axis == 'Y' or self.axis == 'y':
             for line in self.lines:
@@ -739,9 +739,11 @@ class myWindowApp():
 
         for curve in self.curves:
             if self.axis == 'x' or self.axis == 'X':
-                tmp_curve = ([curve[0], curve[1] + val, curve[2], curve[3], curve[4], curve[5], curve[6], curve[7]])
+                tmp_curve = ([curve[0], curve[1] + val, curve[2],
+                              curve[3], curve[4], curve[5], curve[6], curve[7]])
             else:
-                tmp_curve = ([curve[0] + val, curve[1], curve[2], curve[3], curve[4], curve[5], curve[6], curve[7]])
+                tmp_curve = ([curve[0] + val, curve[1], curve[2],
+                              curve[3], curve[4], curve[5], curve[6], curve[7]])
             sh_curves.append(tmp_curve)
 
         self.lines = sh_lines
@@ -865,10 +867,10 @@ def main():
     # print("-1,0", math.atan2(-1, 0) * 180 / math.pi)
     # print("0,-1", math.atan2(0, -1) * 180 / math.pi)
 
-    print("1,1", math.atan2(1, 1) * 180 / math.pi)
-    print("-1,1", math.atan2(-1, 1) * 180 / math.pi)
-    print("-1,-1", math.atan2(-1, -1) * 180 / math.pi)
-    print("1,-1", math.atan2(1, -1) * 180 / math.pi)
+    print("1,1", math.atan2(1, 1))
+    print("-1,1", math.atan2(-1, 1))
+    print("-1,-1", math.atan2(-1, -1))
+    print("1,-1", math.atan2(1, -1))
 
     myWindowApp()
 
