@@ -13,12 +13,15 @@ import numpy as np
 from tkinter import *
 from tkinter import filedialog
 import math
+import re
+
 
 class myWindowApp():
 
     """
     initialize all app varibles
             """
+
     def __init__(self):
         self.menu = 0
         self.window = 0
@@ -52,14 +55,13 @@ class myWindowApp():
         # start function
         self.initWindow()
 
-
     """
        clean_canvas(self):
        deletes all drawing from canvas.
             """
+
     def clean_canvas(self):
         if self.canvas != 0:
-            print("here")
             self.canvas.delete("all")
             print("clean canvas")
             self.messages.config(text="All clean! Let's start again")
@@ -72,6 +74,7 @@ class myWindowApp():
         browseFiles(self):
         open the file explorer window to brows file.
             """
+
     def browseFiles(self):
         # check if canvas window  is closed
         if self.canvas == 0:
@@ -90,6 +93,7 @@ class myWindowApp():
         getObjects(self, fileName):
         open file and reads all control points.
             """
+
     def getObjects(self, fileName):
         if fileName:
             with open(fileName) as f:
@@ -115,12 +119,13 @@ class myWindowApp():
 
     """
         normalize_file_input(self):
-        normalize the word coordinates to our 
+        normalize the word coordinates to our
         canvas coordinates.
             """
+
     def normalize_file_input(self):
-        maxWidth = 0
-        maxHight = 0
+        maxWidth = 1
+        maxHight = 1
 
         for line in self.lines:
             for i in range(0, len(line)):
@@ -158,8 +163,10 @@ class myWindowApp():
                 if i % 2 == 0:  # x values
                     tmp.append(line[i] / maxWidth * self.size)
 
+                # if i % 2 == 1:  # x values
+                #     tmp.append(self.size - (line[i] / maxHight * self.size))
                 if i % 2 == 1:  # x values
-                    tmp.append(self.size - (line[i] / maxHight * self.size))
+                    tmp.append((line[i] / maxHight * self.size))
 
             n_lines.append(tmp)
 
@@ -169,14 +176,17 @@ class myWindowApp():
                 if i % 2 == 0:  # x values
                     tmp.append(curve[i] / maxWidth * self.size)
 
+                # if i % 2 == 1:  # x values
+                #     tmp.append(self.size - (curve[i] / maxHight * self.size))
+
                 if i % 2 == 1:  # x values
-                    tmp.append(self.size - (curve[i] / maxHight * self.size))
+                    tmp.append((curve[i] / maxHight * self.size))
 
                 n_curves.append(tmp)
 
         for circle in self.circles:
             n_circles.append([circle[0] / maxWidth * self.size,
-                              self.size - (circle[1] / maxHight * self.size),
+                              (circle[1] / maxHight * self.size),
                               circle[2] / maxHight * self.size])
 
         self.lines = n_lines
@@ -187,6 +197,7 @@ class myWindowApp():
         draw_file(self, lines, circles, curves):
         draw all lines according to the file's information
             """
+
     def draw_file(self, lines, circles, curves):
 
         for line in lines:
@@ -203,6 +214,7 @@ class myWindowApp():
         transformation_help(self):
         change text information to information about transactions.
             """
+
     def transformation_help(self):
         self.help.delete('1.0', END)
         info = """In order to display your coordinates file\nmake sure it follows these rules:\n- Line has to be formatted as (x1, y1, x2, y2)\n- Circle has to be formatted as (x, y, radius)\n- Curve has to be formatted as (x1, y1, x2, y2, x3, y3, x4, y4).\n"""
@@ -212,6 +224,7 @@ class myWindowApp():
         file_help(self):
         change text information to information about file.
             """
+
     def file_help(self):
         self.help.delete('1.0', END)
         info = """You should upload TXT file that contains your structure.\nIn the file, the structure should be divided to control points for\ncurves, circles and lines.\nFor the points structures please go to Transactions Help.\n"""
@@ -221,15 +234,17 @@ class myWindowApp():
         destroy_transaction_widget(self):
         deletes all widgets relevant to specific transaction.
             """
+
     def destroy_transaction_widget(self):
         if self.tollbar != 0:
             self.tollbar.destroy()
 
     """
         get_user_inputs(self):
-        get user inputs acoording to the transaction 
+        get user inputs acoording to the transaction
         and call the correct transformation function.
             """
+
     def get_user_inputs(self):
         # clean canvas before translations
         self.clean_canvas()
@@ -257,6 +272,7 @@ class myWindowApp():
         draws curve given 4 points based on
         Bezier algorithm for drawing curve
             """
+
     def draw_curve(self, x1, y1, x2, y2, x3, y3, x4, y4):
 
         linesInCurve = 1000
@@ -278,13 +294,13 @@ class myWindowApp():
     """
         create_circle(self, t, y, r):
             """
+
     def create_circle(self, t, y, r):  # center coordinates, radius
         x0 = t - r
         y0 = y - r
         x1 = t + r
         y1 = y + r
         self.canvas.create_oval(x0, y0, x1, y1)
-
 
     #################################
     #######  transformations  #######
@@ -293,6 +309,7 @@ class myWindowApp():
         scalling_input(self):
         get scaling value from user
             """
+
     def scalling_input(self):
         self.flag = 0
         # Create toolbar menu for user inputs
@@ -319,8 +336,9 @@ class myWindowApp():
         1.scalling_transformation(self):
         !!!!!!!!!!!!!!!!!!!!!! info
             """
+
     def scalling_transformation(self):
-    # change y to division instead of multiply!!!
+        # change y to division instead of multiply!!!
         s_lines = []
         s_circles = []
         s_curves = []
@@ -345,6 +363,7 @@ class myWindowApp():
         translation_input(self):
         get translation value from user
             """
+
     def translation_input(self):
         self.flag = 1
         # Create toolbar menu for user inputs
@@ -374,6 +393,7 @@ class myWindowApp():
         2.translation(self):
         !!!!!!!!!!!!!!!!!!!!!! info
             """
+
     def translation(self):
         s_lines = []
         s_circles = []
@@ -406,6 +426,7 @@ class myWindowApp():
         rotate_input(self):
         get angle value from user
             """
+
     def rotate_input(self):
         self.flag = 2
         # Create toolbar menu for user inputs
@@ -432,17 +453,18 @@ class myWindowApp():
         3.rotate(self):
         !!!!!!!!!!!!!!!!!!!!!! info
             """
-    def get_calculated_rotation_x(self, x, y):
+
+    def change_coordinates(self, x, y):
         r = math.sqrt(pow(x, 2) + pow(y, 2))
         phi = math.atan2(y, x) * 180 / math.pi
 
-        return r * math.cos(phi)
+        if x > 0 and y < 0:
+            phi = 180 + phi
 
-    def get_calculated_rotation_y(self, x, y):
-        r = math.sqrt(pow(x, 2) + pow(y, 2))
-        phi = math.atan2(y, x) * 180 / math.pi
+        else:
+            phi = 90 - phi
 
-        return r * math.sin(phi)
+        return r * math.cos(phi), r * math.sin(phi)
 
     def rotate(self):
         sinus = math.sin(self.rotation)
@@ -458,11 +480,8 @@ class myWindowApp():
             x2 = line[2]
             y2 = line[3]
 
-            g_x1 = self.get_calculated_rotation_x(x1, y1)
-            g_y1 = self.get_calculated_rotation_y(x1, y1)
-
-            g_x2 = self.get_calculated_rotation_x(x2, y2)
-            g_y2 = self.get_calculated_rotation_y(x2, y2)
+            g_x1, g_y1 = self.change_coordinates(x1, y1)
+            g_x2, g_y2 = self.change_coordinates(x2, y2)
 
             s_lines.append([g_x1 * cosinus - g_y1 * sinus, g_x1 * sinus + g_y1 * cosinus, g_x2 * cosinus - g_y2 * sinus,
                             g_x2 * sinus + g_y2 * cosinus])
@@ -477,17 +496,10 @@ class myWindowApp():
             x4 = curve[6]
             y4 = curve[7]
 
-            g_x1 = self.get_calculated_rotation_x(x1, y1)
-            g_y1 = self.get_calculated_rotation_y(x1, y1)
-
-            g_x2 = self.get_calculated_rotation_x(x2, y2)
-            g_y2 = self.get_calculated_rotation_y(x2, y2)
-
-            g_x3 = self.get_calculated_rotation_x(x3, y3)
-            g_y3 = self.get_calculated_rotation_y(x3, y3)
-
-            g_x4 = self.get_calculated_rotation_x(x4, y4)
-            g_y4 = self.get_calculated_rotation_y(x4, y4)
+            g_x1, g_y1 = self.change_coordinates(x1, y1)
+            g_x2, g_y2 = self.change_coordinates(x2, y2)
+            g_x3, g_y3 = self.change_coordinates(x3, y3)
+            g_x4, g_y4 = self.change_coordinates(x4, y4)
 
             s_curves.append([
                 g_x1 * cosinus - g_y1 * sinus,
@@ -504,13 +516,10 @@ class myWindowApp():
             x = circle[0]
             y = circle[1]
 
-            g_x = self.get_calculated_rotation_x(x, y)
-            g_y = self.get_calculated_rotation_y(x, y)
+            g_x, g_y = self.change_coordinates(x, y)
 
             s_circles.append([g_x * cosinus - g_y * sinus,
                               g_x * sinus + g_y * cosinus, circle[2]])
-
-        print(s_lines)
 
         self.lines = s_lines
         self.circles = s_circles
@@ -518,11 +527,11 @@ class myWindowApp():
 
         self.draw_file(self.lines, self.circles, self.curves)
 
-
     """
         mirror_input(self):
         get axis from user
             """
+
     def mirror_input(self):
         self.flag = 3
         # Create toolbar menu for user inputs
@@ -549,6 +558,7 @@ class myWindowApp():
         4.mirror_transformation(self):
         !!!!!!!!!!!!!!!!!!!!! info
             """
+
     def mirror_transformation(self):
         min_y = 0
         mix_x = 0
@@ -602,11 +612,11 @@ class myWindowApp():
         self.translation()
         self.draw_file(self.lines, self.circles, self.curves)
 
-
     """
         shearing_input(self):
         get shearing value from user
             """
+
     def shearing_input(self):
         self.flag = 4
         # Create toolbar menu for user inputs
@@ -635,6 +645,7 @@ class myWindowApp():
         shearing(self):
         !!!!!!!!!!!!!!!!!!!!! info
             """
+
     def shearing(self):
         xMatrix = [[1, 0, 0],
                    [self.move_x, 1, 0],
@@ -655,7 +666,7 @@ class myWindowApp():
                 line_matmul = np.matmul([line[0], line[1], 1], yMatrix)
                 # print(f"matmul: {line_matmul}")
             sh_lines.append([line_matmul[0],
-                            line_matmul[1], line[2], line[3]])
+                             line_matmul[1], line[2], line[3]])
 
         for circle in self.circles:
             if self.axis == 'x' or self.axis == 'X':
@@ -679,11 +690,10 @@ class myWindowApp():
 
         self.draw_file(self.lines, self.circles, self.curves)
 
-
-
     #################################
     #######        GUI        #######
     #################################
+
     def on_closing(self):
         print("canvas window is closed")
         self.window.destroy()
@@ -694,6 +704,7 @@ class myWindowApp():
         open_canvas(self):
         open another window to show drawing on canvas.
             """
+
     def open_canvas(self):
         if self.window == 0:
             self.window = Toplevel(master=self.menu)
@@ -756,7 +767,8 @@ class myWindowApp():
         transform_menu.add_separator()
         transform_menu.add_command(label="Mirror", command=self.mirror_input)
         transform_menu.add_separator()
-        transform_menu.add_command(label="Shearing", command=self.shearing_input)
+        transform_menu.add_command(
+            label="Shearing", command=self.shearing_input)
         transform_menu.add_separator()
         transform_menu.add_command(
             label="Transformations Help", command=self.transformation_help)
@@ -780,15 +792,23 @@ class myWindowApp():
         # window.mainloop(), enables Tkinter listen to events in the menu window
         self.menu.mainloop()
 
+
 """
 run app
 """
 
+
 def main():
-    print(math.atan2(0, 1) * 180 / math.pi)
-    print(math.atan2(0, -1) * 180 / math.pi)
-    # print(math.atan2(1, -1) * 180 / math.pi)
-    # print(math.atan2(-1, ) * 180 / math.pi)
+    # print("1,0", math.atan2(1, 0) * 180 / math.pi)
+    # print("0,1", math.atan2(0, 1) * 180 / math.pi)
+    # print("-1,0", math.atan2(-1, 0) * 180 / math.pi)
+    # print("0,-1", math.atan2(0, -1) * 180 / math.pi)
+
+    print("1,1", math.atan2(1, 1) * 180 / math.pi)
+    print("-1,1", math.atan2(-1, 1) * 180 / math.pi)
+    print("-1,-1", math.atan2(-1, -1) * 180 / math.pi)
+    print("1,-1", math.atan2(1, -1) * 180 / math.pi)
+
     myWindowApp()
 
 
