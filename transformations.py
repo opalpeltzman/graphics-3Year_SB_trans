@@ -5,10 +5,11 @@ Guy Sharir 310010244
 Opal Peltzman 208521385
 """
 # problems:
-# 1. when trying to read a file for the second time
-# 2. mirror when its max value and not min
+# 1. when trying to read a file for the second time - done
+# 2. mirror when its max value and not min - method to check max coordinates? and not allowing > 700
 # 3. rotation
 # 4. shearing
+import re
 import numpy as np
 from tkinter import *
 from tkinter import filedialog
@@ -17,7 +18,6 @@ import re
 
 
 class myWindowApp():
-
     """
     initialize all app varibles
             """
@@ -60,10 +60,53 @@ class myWindowApp():
        deletes all drawing from canvas.
             """
 
+    def bring_to_view(self):
+        min_x = 0
+        min_y = 0
+
+        for line in self.lines:
+            for i in range(0, len(line)):
+                if i % 2 == 0:  # x values
+                    min_x = min(line[i], min_x)
+
+                if i % 2 == 1:  # x values
+                    min_y = min(line[i], min_y)
+
+        for curve in self.curves:
+            for i in range(0, len(curve)):
+                if i % 2 == 0:  # x values
+                    min_x = min(curve[i], min_x)
+
+                if i % 2 == 1:  # x values
+                    min_y = min(curve[i], min_y)
+
+        for circle in self.circles:
+            min_x = min(circle[0], min_x)
+            min_y = min(circle[1], min_y)
+
+        for line in self.lines:
+            for i in range(0, len(line)):
+                if i % 2 == 0:  # x values
+                    line[i] -= min_x
+
+                if i % 2 == 1:  # y values
+                    line[i] -= min_y
+
+        for curve in self.curves:
+            for i in range(0, len(curve)):
+                if i % 2 == 0:  # x values
+                    curve[i] -= min_x
+
+                if i % 2 == 1:  # x values
+                    curve[i] -= min_y
+
+        for circle in self.circles:
+            circle[0] -= min_x
+            circle[1] -= min_y
+
     def clean_canvas(self):
         if self.canvas != 0:
             self.canvas.delete("all")
-            print("clean canvas")
             self.messages.config(text="All clean! Let's start again")
             # Adding img
             self.img = PhotoImage(width=self.size, height=self.size)
@@ -95,6 +138,9 @@ class myWindowApp():
             """
 
     def getObjects(self, fileName):
+        self.circles = []
+        self.lines = []
+        self.curves = []
         if fileName:
             with open(fileName) as f:
                 for row in f:
@@ -114,7 +160,7 @@ class myWindowApp():
                     if pointsLen == 8:
                         self.curves.append(new)
 
-        self.normalize_file_input()
+        # self.normalize_file_input()
         self.draw_file(self.lines, self.circles, self.curves)
 
     """
@@ -246,26 +292,44 @@ class myWindowApp():
             """
 
     def get_user_inputs(self):
-        # clean canvas before translations
-        self.clean_canvas()
         # {0:scaling, 1:rotation, 2:translation, 3:mirror, 4:shearing}
         if self.flag == 0:
-            self.scaling_value = float(self.x_entry.get())
-            self.scalling_transformation()
+            self.scaling_value = 0
+            if self.x_entry.get():
+                self.scaling_value = float(self.x_entry.get())
+                self.scalling_transformation()
+            else:
+                self.messages.config(
+                    text="please enter scaling value!")
         elif self.flag == 1:
-            self.move_x = float(self.x_entry.get())
-            self.move_y = -1 * float(self.y_entry.get())
+            self.move_x = self.move_y = 0
+            if self.x_entry.get():
+                self.move_x = float(self.x_entry.get())
+            if self.y_entry.get():
+                self.move_y = float(self.y_entry.get())
             self.translation()
         elif self.flag == 2:
-            self.rotation = float(self.x_entry.get())
+            self.rotation = 0
+            if self.x_entry.get():
+                self.rotation = float(self.x_entry.get())
             self.rotate()
         elif self.flag == 3:
-            self.axis = str(self.x_entry.get())
-            self.mirror_transformation()
+            if self.x_entry.get():
+                self.axis = str(self.x_entry.get())
+                self.mirror_transformation()
+            else:
+                self.messages.config(
+                    text="please enter axis!")
         elif self.flag == 4:
-            self.axis = str(self.x_entry.get())
-            self.move_x = float(self.y_entry.get())
-            self.shearing()
+            self.move_x = 0
+            if self.x_entry.get():
+                self.axis = str(self.x_entry.get())
+                if self.y_entry.get():
+                    self.move_x = float(self.y_entry.get())
+                self.shearing()
+            else:
+                self.messages.config(
+                    text="please enter axis!")
 
     """
         draw_curve(self, x1, y1, x2, y2, x3, y3, x4, y4):
@@ -338,6 +402,8 @@ class myWindowApp():
             """
 
     def scalling_transformation(self):
+        # clean canvas before translations
+        self.clean_canvas()
         # change y to division instead of multiply!!!
         s_lines = []
         s_circles = []
@@ -351,11 +417,10 @@ class myWindowApp():
 
         for curve in self.curves:
             s_curves.append([x * self.scaling_value for x in curve])
-        print(self.lines)
-        print(s_lines)
-        # self.lines = s_lines
-        # self.circles = s_circles
-        # self.curves = s_curves
+
+        self.lines = s_lines
+        self.circles = s_circles
+        self.curves = s_curves
 
         self.draw_file(s_lines, s_circles, s_curves)
 
@@ -395,6 +460,8 @@ class myWindowApp():
             """
 
     def translation(self):
+        # clean canvas before translations
+        self.clean_canvas()
         s_lines = []
         s_circles = []
         s_curves = []
@@ -464,12 +531,17 @@ class myWindowApp():
         else:
             phi = 90 - phi
 
-        return r * math.cos(phi), r * math.sin(phi)
+        print(f"r:${r}, phi:${phi}, x:${x}, y:${y}")
+
+        return r, phi
 
     def rotate(self):
+        # clean canvas before translations
+        self.clean_canvas()
         sinus = math.sin(self.rotation)
         cosinus = math.cos(self.rotation)
 
+        print(self.rotation)
         s_lines = []
         s_curves = []
         s_circles = []
@@ -480,11 +552,16 @@ class myWindowApp():
             x2 = line[2]
             y2 = line[3]
 
-            g_x1, g_y1 = self.change_coordinates(x1, y1)
-            g_x2, g_y2 = self.change_coordinates(x2, y2)
+            # g_x1, g_y1 = self.change_coordinates(x1, y1)
+            # g_x2, g_y2 = self.change_coordinates(x2, y2)
 
-            s_lines.append([g_x1 * cosinus - g_y1 * sinus, g_x1 * sinus + g_y1 * cosinus, g_x2 * cosinus - g_y2 * sinus,
-                            g_x2 * sinus + g_y2 * cosinus])
+            # s_lines.append([g_x1 * cosinus - g_y1 * sinus, g_x1 * sinus + g_y1 * cosinus, g_x2 * cosinus - g_y2 * sinus,
+            #                 g_x2 * sinus + g_y2 * cosinus])
+
+            r1, phi1 = self.change_coordinates(x1, y1)
+            r2, phi2 = self.change_coordinates(x2, y2)
+            s_lines.append([r1 * math.cos(phi1 + self.rotation), r1 * math.sin(phi1 + self.rotation),
+                            r2 * math.cos(phi2 + self.rotation), r2 * math.sin(phi2 + self.rotation)])
 
         for curve in self.curves:
             x1 = curve[0]
@@ -525,6 +602,9 @@ class myWindowApp():
         self.circles = s_circles
         self.curves = s_curves
 
+        # self.bring_to_view()
+        print(self.lines)
+
         self.draw_file(self.lines, self.circles, self.curves)
 
     """
@@ -560,8 +640,8 @@ class myWindowApp():
             """
 
     def mirror_transformation(self):
-        min_y = 0
-        mix_x = 0
+        # clean canvas before translations
+        self.clean_canvas()
         s_lines = []
         s_circles = []
         s_curves = []
@@ -570,46 +650,33 @@ class myWindowApp():
             for line in self.lines:
                 s_lines.append([line[0], line[1] * -1, line[2],
                                 line[3] * -1])
-                if min(s_lines[0]) < min_y:
-                    min_y = min(s_lines[0])
 
             for circle in self.circles:
-                if circle[1] * -1 < min_y:
-                    min_y = circle[1] * -1
                 s_circles.append([circle[0], circle[1] * -1, circle[2]])
 
             for curve in self.curves:
                 s_curves.append([curve[0], curve[1] * -1, curve[2], curve[3] * -1, curve[4], curve[5] * -1, curve[6],
                                  curve[7] * -1])
-                if min(s_curves[0]) < min_y:
-                    min_y = min(s_curves[0])
-            self.move_y = -1 * min_y
 
-        if self.axis == 'Y' or self.axis == 'y':
+
+        elif self.axis == 'Y' or self.axis == 'y':
             for line in self.lines:
                 s_lines.append([line[0] * -1, line[1], line[2] * -1,
                                 line[3]])
-                if min(s_lines[0]) < mix_x:
-                    mix_x = min(s_lines[0])
 
             for circle in self.circles:
-                if circle[0] * -1 < mix_x:
-                    mix_x = circle[0] * -1
                 s_circles.append([circle[0] * -1, circle[1], circle[2]])
 
             for curve in self.curves:
                 s_curves.append(
                     [curve[0] * -1, curve[1], curve[2] * -1, curve[3], curve[4] * -1, curve[5], curve[6] * -1,
                      curve[7]])
-                if min(s_curves[0]) < mix_x:
-                    mix_x = min(s_curves[0])
-            self.move_x = -1 * mix_x
 
         self.lines = s_lines
         self.circles = s_circles
         self.curves = s_curves
 
-        self.translation()
+        self.bring_to_view()
         self.draw_file(self.lines, self.circles, self.curves)
 
     """
@@ -647,48 +714,42 @@ class myWindowApp():
             """
 
     def shearing(self):
-        xMatrix = [[1, 0, 0],
-                   [self.move_x, 1, 0],
-                   [0, 0, 1]]
-
-        yMatrix = [[1, self.move_x, 0],
-                   [0, 1, 0],
-                   [0, 0, 1]]
+        # clean canvas before translations
+        self.clean_canvas()
 
         sh_lines = []
         sh_circles = []
         sh_curves = []
 
+        val = self.move_x
+
         for line in self.lines:
             if self.axis == 'x' or self.axis == 'X':
-                line_matmul = np.matmul([line[0], line[1], 1], xMatrix)
+                tmp_line = ([line[0], line[1] + val, line[2], line[3]])
             else:
-                line_matmul = np.matmul([line[0], line[1], 1], yMatrix)
-                # print(f"matmul: {line_matmul}")
-            sh_lines.append([line_matmul[0],
-                             line_matmul[1], line[2], line[3]])
+                tmp_line = ([line[0] + val, line[1], line[2], line[3]])
+            sh_lines.append(tmp_line)
 
         for circle in self.circles:
             if self.axis == 'x' or self.axis == 'X':
-                circle_matmul = np.matmul([circle[0], circle[1], 1], xMatrix)
+                tmp_circle = ([circle[0], circle[1] + val, circle[2]])
             else:
-                circle_matmul = np.matmul([circle[0], circle[1], 1], yMatrix)
-            sh_circles.append([
-                circle_matmul[0], circle_matmul[1], circle[2]])
+                tmp_circle = ([circle[0] + val, circle[1], circle[2]])
+            sh_circles.append(tmp_circle)
 
         for curve in self.curves:
             if self.axis == 'x' or self.axis == 'X':
-                curve_matmul = np.matmul([curve[0], curve[1], 1], xMatrix)
+                tmp_curve = ([curve[0], curve[1] + val, curve[2], curve[3], curve[4], curve[5], curve[6], curve[7]])
             else:
-                curve_matmul = np.matmul([curve[0], curve[1], 1], yMatrix)
-            sh_curves.append([
-                curve_matmul[0], curve_matmul[1], curve[2], curve[3], curve[4], curve[5], curve[6], curve[7]])
+                tmp_curve = ([curve[0] + val, curve[1], curve[2], curve[3], curve[4], curve[5], curve[6], curve[7]])
+            sh_curves.append(tmp_curve)
 
         self.lines = sh_lines
         self.circles = sh_circles
         self.curves = sh_curves
 
-        self.draw_file(self.lines, self.circles, self.curves)
+        self.draw_file(sh_lines, sh_circles, sh_curves)
+        # self.draw_file(self.lines, self.circles, self.curves)
 
     #################################
     #######        GUI        #######
